@@ -8,6 +8,7 @@ use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Handler\Curl\Util;
 use Monolog\Handler\MissingExtensionException;
 use Monolog\Logger;
+use Monolog\LogRecord;
 
 class DatadogHandler extends AbstractProcessingHandler
 {
@@ -56,7 +57,7 @@ class DatadogHandler extends AbstractProcessingHandler
     /**
      * Handles a log record
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         $this->send($record['formatted']);
     }
@@ -97,7 +98,7 @@ class DatadogHandler extends AbstractProcessingHandler
     /**
      * Get Datadog Api Key.
      * @param string $key
-     * 
+     *
      * @return string
      */
     protected function getApiKey($key)
@@ -112,7 +113,7 @@ class DatadogHandler extends AbstractProcessingHandler
     /**
      * Get Datadog Region host.
      * @param ?string $region
-     * 
+     *
      * @return string
      */
     protected function getApiHost($region)
@@ -121,7 +122,7 @@ class DatadogHandler extends AbstractProcessingHandler
     }
     /**
      * Get Datadog Source from $attributes params.
-     * 
+     *
      * @return string
      */
     protected function getSource()
@@ -131,7 +132,7 @@ class DatadogHandler extends AbstractProcessingHandler
 
     /**
      * Get Datadog Service from $attributes params.
-     * 
+     *
      * @return string
      */
     protected function getService($record)
@@ -143,7 +144,7 @@ class DatadogHandler extends AbstractProcessingHandler
 
     /**
      * Get Datadog Hostname from $attributes params.
-     * 
+     *
      * @return string
      */
     protected function getHostname()
@@ -153,7 +154,7 @@ class DatadogHandler extends AbstractProcessingHandler
 
     /**
      * Get Datadog Tags from $attributes params.
-     * 
+     *
      * @return string
      */
     protected function getTags()
