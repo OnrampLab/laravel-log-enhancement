@@ -18,6 +18,7 @@
         "ramsey/uuid": "^4.0.0"
     },
     "require-dev": {
+        "datadog/dd-trace": "^0.90",
         "fzaninotto/faker": "^1.9@dev",
         "illuminate/contracts": "^8.0",
         "illuminate/log": "^8.0",
@@ -30,6 +31,9 @@
         "phpunit/phpunit": "^8.0",
         "sempro/phpunit-pretty-print": "1.2.2",
         "symfony/thanks": "^1.0"
+    },
+    "suggest": {
+        "datadog/dd-trace": "Datadog APM connect logs and traces."
     },
     "autoload": {
         "psr-4": {
