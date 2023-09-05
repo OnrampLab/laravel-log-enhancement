@@ -59,7 +59,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Onramplab\\LaravelLogEnhancement\\LaravelLogEnhancementServiceProvider"
+                "Onramplab\\LaravelLogEnhancement\\LaravelLogEnhancementServiceProvider",
+                "Onramplab\\LaravelLogEnhancement\\DatadogLoggingServiceProvider"
             ]
         }
     }
