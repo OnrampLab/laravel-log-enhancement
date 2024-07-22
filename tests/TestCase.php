@@ -7,16 +7,11 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
 {
-    public function setup() : void
+    protected function setUp() : void
     {
         parent::setUp();
+
         $this->withoutExceptionHandling();
-        // $this->artisan('migrate', ['--database' => 'testing']);
-
-        // $this->loadMigrationsFrom(__DIR__ . '/../src/database/migrations');
-        // $this->loadLaravelMigrations(['--database' => 'testing']);
-
-        // $this->withFactories(__DIR__.'/../src/database/factories');
     }
 
     protected function getEnvironmentSetUp($app)

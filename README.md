@@ -84,6 +84,7 @@ You can adding following block into `config/logging.php`.
 ```php
 use Monolog\Formatter\JsonFormatter;
 use Onramplab\LaravelLogEnhancement\Handlers\DatadogHandler;
+use Onramplab\LaravelLogEnhancement\Processors\DatadogProcessor;
 
 return [
   //...
@@ -106,6 +107,7 @@ return [
           ],
       ],
       'formatter' => JsonFormatter::class,
+      'processors' => [DatadogProcessor::class],
     ],
   ]
 ];
