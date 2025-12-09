@@ -60,12 +60,37 @@ class Logger extends IlluminateLogger
 
         // attach class_path
         // NOTE: it's hardcoded, should find a better way to get caller class
-        $stack = debug_backtrace();
-        $caller = $stack[3] ?? null;
-
-        if ($caller && isset($caller['class']) && $caller['class'] === 'Illuminate\Log\LogManager') {
-            // It means log from channel
-            $caller = $stack[5] ?? null;
+        $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        
+        // Find the first caller that is not from logging infrastructure
+        $caller = null;
+        $skipClasses = [
+            'Illuminate\Log\Logger',
+            'Illuminate\Log\LogManager',
+            'Illuminate\Support\Facades\Facade',
+            'Onramplab\LaravelLogEnhancement\Logger',
+            'Onramplab\LaravelLogEnhancement\LogManager',
+        ];
+        
+        foreach ($stack as $frame) {
+            // Skip frames without class (closures, global scope, etc.)
+            if (!isset($frame['class'])) {
+                continue;
+            }
+            
+            // Skip logging infrastructure classes
+            $skip = false;
+            foreach ($skipClasses as $skipClass) {
+                if (str_starts_with($frame['class'], $skipClass)) {
+                    $skip = true;
+                    break;
+                }
+            }
+            
+            if (!$skip) {
+                $caller = $frame;
+                break;
+            }
         }
 
         $info['class_path'] = $caller['class'] ?? 'unknown';
