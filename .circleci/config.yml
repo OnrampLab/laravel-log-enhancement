@@ -28,7 +28,7 @@ jobs:
   run_test:
     working_directory: ~/app
     docker:
-      - image: cimg/php:7.4.26
+      - image: cimg/php:8.4
     steps:
       - run_test
 

@@ -2,6 +2,6 @@ version: '3.4'
 
 services:
   php:
-    image: thecodingmachine/php:8.2-v4-slim-apache
+    image: thecodingmachine/php:8.4-v4-slim-apache
     volumes:
       - ./:/var/www/html
