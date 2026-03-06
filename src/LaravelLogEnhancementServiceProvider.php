@@ -3,10 +3,11 @@
 namespace Onramplab\LaravelLogEnhancement;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
-use Queue;
+use Illuminate\Support\ServiceProvider;
 
 class LaravelLogEnhancementServiceProvider extends ServiceProvider
 {
@@ -67,9 +68,26 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
 
     public function registerHooks()
     {
-        Queue::before(function () {
+        // Inject trace-id as a plain string into the job payload at dispatch time.
+        // This avoids any need to unserialize the job command when restoring it.
+        Queue::createPayloadUsing(function ($connection, $queue, $payload) {
+            if ($this->app->bound('trace-id')) {
+                $payload['trace_id'] = $this->app->make('trace-id');
+            }
+
+            return $payload;
+        });
+
+        Queue::before(function (JobProcessing $event) {
             $this->app->forgetInstance('log');
             Facade::clearResolvedInstance('log');
+
+            // Restore trace-id from the plain-string payload key injected at dispatch time.
+            $traceId = data_get($event->job->payload(), 'trace_id');
+
+            if ($traceId) {
+                $this->app->instance('trace-id', $traceId);
+            }
         });
     }
 

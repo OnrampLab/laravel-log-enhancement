@@ -70,8 +70,8 @@ class Logger extends IlluminateLogger
 
         $info['class_path'] = $caller['class'];
 
-        // attach tracking_id
-        $info['tracking_id'] = $this->debugId;
+        // attach tracking_id — prefer app-level trace-id (set by TraceIdMiddleware or job propagation)
+        $info['tracking_id'] = app()->bound('trace-id') ? app('trace-id') : $this->debugId;
 
         return $info;
     }
