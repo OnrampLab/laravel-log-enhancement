@@ -39,8 +39,15 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
 
     protected function registerMiddleware()
     {
+        if (!$this->app->bound(Kernel::class)) {
+            return;
+        }
+
         $kernel = $this->app->make(Kernel::class);
-        $kernel->pushMiddleware(TraceIdMiddleware::class);
+
+        if (method_exists($kernel, 'pushMiddleware')) {
+            $kernel->pushMiddleware(TraceIdMiddleware::class);
+        }
     }
 
     /**
@@ -87,10 +94,10 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
         // This avoids any need to unserialize the job command when restoring it.
         Queue::createPayloadUsing(function ($connection, $queue, $payload) {
             if ($this->app->bound('trace-id')) {
-                $payload['trace_id'] = $this->app->make('trace-id');
+                return ['trace_id' => $this->app->make('trace-id')];
             }
 
-            return $payload;
+            return [];
         });
 
         Queue::before(function (JobProcessing $event) {
