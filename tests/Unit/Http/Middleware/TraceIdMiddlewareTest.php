@@ -50,7 +50,7 @@ class TraceIdMiddlewareTest extends TestCase
         });
 
         $this->assertEquals('existing-trace-id-123', App::make('trace-id'));
-        $this->assertEquals('existing-trace-id-123', $response->headers->get('X-Trace-Id'));
+        $this->assertEquals('existing-trace-id-123', $response->headers->get('X-Request-Id'));
     }
 
     /**
@@ -66,7 +66,7 @@ class TraceIdMiddlewareTest extends TestCase
         });
 
         $this->assertEquals('existing-request-id-456', App::make('trace-id'));
-        $this->assertEquals('existing-request-id-456', $response->headers->get('X-Trace-Id'));
+        $this->assertEquals('existing-request-id-456', $response->headers->get('X-Request-Id'));
     }
 
     /**
@@ -83,6 +83,6 @@ class TraceIdMiddlewareTest extends TestCase
         $traceId = App::make('trace-id');
 
         $this->assertTrue(Uuid::isValid($traceId));
-        $this->assertEquals($traceId, $response->headers->get('X-Trace-Id'));
+        $this->assertEquals($traceId, $response->headers->get('X-Request-Id'));
     }
 }

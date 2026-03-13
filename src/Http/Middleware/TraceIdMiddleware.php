@@ -27,7 +27,7 @@ class TraceIdMiddleware
 
         $response = $next($request);
 
-        $response->headers->set('X-Trace-Id', $traceId);
+        $response->headers->set('X-Request-Id', $traceId);
 
         return $response;
     }
