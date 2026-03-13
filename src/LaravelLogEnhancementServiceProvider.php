@@ -21,6 +21,8 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        // Ensure a trace-id is always available in the container.
+        // This acts as a fallback for non-HTTP contexts (CLI, Cron, Workers).
         if (!$this->app->bound('trace-id')) {
             $this->app->instance('trace-id', Uuid::uuid4()->toString());
         }
@@ -39,12 +41,16 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
 
     protected function registerMiddleware()
     {
+        // We check if Kernel is bound instead of using runningInConsole().
+        // This ensures the middleware is still registered during unit tests (which run in CLI),
+        // while preventing a BindingResolutionException in pure Worker or Artisan environments.
         if (!$this->app->bound(Kernel::class)) {
             return;
         }
 
         $kernel = $this->app->make(Kernel::class);
 
+        // Ensure the resolved Kernel actually supports pushing middleware (standard for Web Kernels).
         if (method_exists($kernel, 'pushMiddleware')) {
             $kernel->pushMiddleware(TraceIdMiddleware::class);
         }
@@ -91,7 +97,8 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
     public function registerHooks()
     {
         // Inject trace-id as a plain string into the job payload at dispatch time.
-        // This avoids any need to unserialize the job command when restoring it.
+        // We only return the 'trace_id' key because Laravel uses array_merge to combine
+        // the return value of this callback with the existing payload.
         Queue::createPayloadUsing(function ($connection, $queue, $payload) {
             if ($this->app->bound('trace-id')) {
                 return ['trace_id' => $this->app->make('trace-id')];
