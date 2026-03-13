@@ -61,14 +61,14 @@ class Logger extends IlluminateLogger
         // attach class_path
         // NOTE: it's hardcoded, should find a better way to get caller class
         $stack = debug_backtrace();
-        $caller = $stack[3];
+        $caller = $stack[3] ?? [];
 
-        if ($caller['class'] === 'Illuminate\Log\LogManager') {
+        if (isset($caller['class']) && $caller['class'] === 'Illuminate\Log\LogManager') {
             // It means log from channel
-            $caller = $stack[5];
+            $caller = $stack[5] ?? $caller;
         }
 
-        $info['class_path'] = $caller['class'];
+        $info['class_path'] = $caller['class'] ?? 'unknown';
 
         // attach tracking_id — prefer app-level trace-id (set by TraceIdMiddleware or job propagation)
         $info['tracking_id'] = app()->bound('trace-id') ? app('trace-id') : $this->debugId;
