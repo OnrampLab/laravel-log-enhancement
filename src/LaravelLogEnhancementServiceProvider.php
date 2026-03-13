@@ -3,11 +3,14 @@
 namespace Onramplab\LaravelLogEnhancement;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Onramplab\LaravelLogEnhancement\Http\Middleware\TraceIdMiddleware;
+use Ramsey\Uuid\Uuid;
 
 class LaravelLogEnhancementServiceProvider extends ServiceProvider
 {
@@ -18,6 +21,12 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (!$this->app->bound('trace-id')) {
+            $this->app->instance('trace-id', Uuid::uuid4()->toString());
+        }
+
+        $this->registerMiddleware();
+
         $this->mergeConfigFrom(__DIR__ . '/../config/LaravelLogEnhancement.php', 'laravel-log-enhancement');
 
         $this->publishConfig();
@@ -26,6 +35,12 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
         // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         // $this->registerRoutes();
         $this->registerHooks();
+    }
+
+    protected function registerMiddleware()
+    {
+        $kernel = $this->app->make(Kernel::class);
+        $kernel->pushMiddleware(TraceIdMiddleware::class);
     }
 
     /**
