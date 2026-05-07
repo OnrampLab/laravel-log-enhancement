@@ -25,7 +25,40 @@ class TraceIdMiddlewareTest extends TestCase
     /**
      * @test
      */
-    public function it_uses_existing_x_amzn_trace_id_header()
+    public function it_uses_x_request_id_as_primary_header()
+    {
+        $request = Request::create('/', 'GET');
+        $request->headers->set('X-Request-Id', 'client-trace-id-123');
+
+        $response = $this->middleware->handle($request, function () {
+            return new Response();
+        });
+
+        $this->assertEquals('client-trace-id-123', App::make('trace-id'));
+        $this->assertEquals('client-trace-id-123', $response->headers->get('X-Request-Id'));
+    }
+
+    /**
+     * @test
+     */
+    public function it_prefers_x_request_id_over_x_amzn_trace_id()
+    {
+        $request = Request::create('/', 'GET');
+        $request->headers->set('X-Request-Id', 'client-trace-id-123');
+        $request->headers->set('X-Amzn-Trace-Id', 'Root=1-67841bd3-169877302925239a05860005');
+
+        $response = $this->middleware->handle($request, function () {
+            return new Response();
+        });
+
+        $this->assertEquals('client-trace-id-123', App::make('trace-id'));
+        $this->assertEquals('client-trace-id-123', $response->headers->get('X-Request-Id'));
+    }
+
+    /**
+     * @test
+     */
+    public function it_falls_back_to_x_amzn_trace_id_when_no_x_request_id()
     {
         $request = Request::create('/', 'GET');
         $request->headers->set('X-Amzn-Trace-Id', 'Root=1-67841bd3-169877302925239a05860005');
@@ -35,38 +68,7 @@ class TraceIdMiddlewareTest extends TestCase
         });
 
         $this->assertEquals('Root=1-67841bd3-169877302925239a05860005', App::make('trace-id'));
-    }
-
-    /**
-     * @test
-     */
-    public function it_uses_existing_x_trace_id_header()
-    {
-        $request = Request::create('/', 'GET');
-        $request->headers->set('X-Trace-Id', 'existing-trace-id-123');
-
-        $response = $this->middleware->handle($request, function () {
-            return new Response();
-        });
-
-        $this->assertEquals('existing-trace-id-123', App::make('trace-id'));
-        $this->assertEquals('existing-trace-id-123', $response->headers->get('X-Request-Id'));
-    }
-
-    /**
-     * @test
-     */
-    public function it_falls_back_to_x_request_id_header()
-    {
-        $request = Request::create('/', 'GET');
-        $request->headers->set('X-Request-Id', 'existing-request-id-456');
-
-        $response = $this->middleware->handle($request, function () {
-            return new Response();
-        });
-
-        $this->assertEquals('existing-request-id-456', App::make('trace-id'));
-        $this->assertEquals('existing-request-id-456', $response->headers->get('X-Request-Id'));
+        $this->assertEquals('Root=1-67841bd3-169877302925239a05860005', $response->headers->get('X-Request-Id'));
     }
 
     /**

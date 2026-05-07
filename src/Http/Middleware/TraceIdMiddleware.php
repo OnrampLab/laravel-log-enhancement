@@ -18,9 +18,8 @@ class TraceIdMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $traceId = $request->header('X-Amzn-Trace-Id')
-            ?: $request->header('X-Trace-Id')
-            ?: $request->header('X-Request-Id')
+        $traceId = $request->header('X-Request-Id')
+            ?: $request->header('X-Amzn-Trace-Id')
             ?: Uuid::uuid4()->toString();
 
         App::instance('trace-id', $traceId);
