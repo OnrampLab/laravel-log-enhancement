@@ -50,8 +50,8 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
 
         $kernel = $this->app->make(Kernel::class);
 
-        // Ensure the resolved Kernel actually supports pushing middleware (standard for Web Kernels).
-        if (method_exists($kernel, 'pushMiddleware')) {
+        // Ensure the resolved Kernel actually supports prepending middleware (standard for Web Kernels).
+        if (method_exists($kernel, 'prependMiddleware')) {
             $kernel->prependMiddleware(TraceIdMiddleware::class);
         }
     }
