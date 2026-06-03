@@ -14,6 +14,31 @@ class DatadogLoggingServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        //
+    }
+
+    /**
+     * Bootstrap any application services.
+     *
+     * The ddtrace/Monolog-processor wiring lives in boot(), NOT register().
+     *
+     * WHY boot() and not register(): the wiring calls `logger()->getLogger()`, which
+     * forces the `log` singleton — and therefore the whole logging stack — to be
+     * resolved, built and cached. Doing that in register() runs it before every other
+     * provider has registered and before config (e.g. config:cache values, the logging
+     * channel config the package's LogManager reads) is guaranteed to be in place, so
+     * the logger gets built from incomplete state and that broken instance is then
+     * cached for the rest of the request. This only manifests where the `ddtrace`
+     * extension is present: register() returns early when `\DDTrace\current_context`
+     * is undefined, so locally (no extension) the early-resolution branch is never
+     * taken, but on staging (extension present) it is — which is exactly why logs went
+     * missing in Datadog only on staging. boot() runs after all providers have
+     * registered and config is settled, so resolving the log stack here is safe.
+     *
+     * @return void
+     */
+    public function boot()
+    {
         // can get function after install php datadog-setup
         if (!function_exists('\DDTrace\current_context')) {
             return;
@@ -38,22 +63,12 @@ class DatadogLoggingServiceProvider extends ServiceProvider
                 // @phpstan-ignore-next-line
                 $context = \DDTrace\current_context();
                 $record['extra']['dd'] = [
-                    'trace_id' => $context['trace_id'],
-                    'span_id'  => $context['span_id'],
+                    'trace_id' => $context['trace_id'] ?? null,
+                    'span_id'  => $context['span_id'] ?? null,
                 ];
 
                 return $record;
             });
         }
-    }
-
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        //
     }
 }
