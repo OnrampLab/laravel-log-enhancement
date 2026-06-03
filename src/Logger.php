@@ -70,8 +70,25 @@ class Logger extends IlluminateLogger
 
         $info['class_path'] = $caller['class'] ?? 'unknown';
 
-        // attach tracking_id — prefer app-level trace-id (set by TraceIdMiddleware or job propagation)
-        $info['tracking_id'] = app()->bound('trace-id') ? app('trace-id') : $this->debugId;
+        // attach tracking_id — prefer app-level trace-id (set by TraceIdMiddleware or job
+        // propagation). Reading the binding must NEVER throw or suppress a log line: in
+        // queue/CLI/early-boot contexts the container may be in an unusual state or the
+        // binding may be absent/malformed, so we always seed tracking_id with the
+        // per-logger debugId first and only override it when the binding resolves to a
+        // non-empty string, inside a try/catch.
+        $info['tracking_id'] = $this->debugId;
+
+        try {
+            if (app()->bound('trace-id')) {
+                $traceId = app('trace-id');
+
+                if (is_string($traceId) && $traceId !== '') {
+                    $info['tracking_id'] = $traceId;
+                }
+            }
+        } catch (\Throwable $e) {
+            // keep the debugId fallback
+        }
 
         return $info;
     }
