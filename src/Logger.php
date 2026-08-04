@@ -46,7 +46,7 @@ class Logger extends IlluminateLogger
      * @param  array  $context
      * @return void
      */
-    protected function writeLog($level, $message, $context)
+    protected function writeLog($level, $message, $context): void
     {
         $info = $this->generateExtraContextInfo();
         $context = array_merge($context, $info);
