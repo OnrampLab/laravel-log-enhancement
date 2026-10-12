@@ -244,12 +244,57 @@ class LogContextTest extends TestCase
      *
      * @return void
      */
-    public function class_path_and_tracking_id_are_appended_after_the_shared_context()
+    public function class_path_and_tracking_id_are_appended_after_the_channel_context()
     {
-        Log::withContext(['shared' => 'value'])->info('message');
+        Log::withContext(['channel' => 'value'])->info('message');
 
-        $this->assertSame(['shared', 'class_path', 'tracking_id'], array_keys($this->logged[0]->context));
-        $this->assertSame('value', $this->logged[0]->context['shared']);
+        $this->assertSame(['channel', 'class_path', 'tracking_id'], array_keys($this->logged[0]->context));
+        $this->assertSame('value', $this->logged[0]->context['channel']);
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
+    public function shared_context_reaches_channels_that_are_already_resolved()
+    {
+        Log::channel('capture');
+        Log::channel('second');
+
+        Log::shareContext(['shared' => 'value']);
+
+        Log::info('message');
+        Log::channel('second')->info('message');
+
+        $this->assertCount(2, $this->logged);
+
+        foreach ($this->logged as $event) {
+            $this->assertSame(['shared', 'class_path', 'tracking_id'], array_keys($event->context));
+            $this->assertSame('value', $event->context['shared']);
+        }
+    }
+
+    /**
+     * @test
+     *
+     * @return void
+     */
+    public function shared_context_does_not_reach_loggers_created_afterwards()
+    {
+        // Current behaviour: LogManager::get() and stack() do not apply the
+        // shared context to the loggers they create, so only channels that
+        // were resolved before shareContext() carry it.
+        Log::shareContext(['shared' => 'value']);
+
+        Log::channel('second')->info('message');
+        Log::stack(['second'])->info('message');
+
+        $this->assertCount(2, $this->logged);
+
+        foreach ($this->logged as $event) {
+            $this->assertSame(['class_path', 'tracking_id'], array_keys($event->context));
+        }
     }
 
     /**
@@ -292,14 +337,16 @@ class LogContextTest extends TestCase
         Log::info('before');
         LogJob::dispatch();
         LogJob::dispatch();
+        Log::info('after');
 
         $ids = $this->loggedTrackingIds();
 
-        $this->assertCount(5, $ids);
+        $this->assertCount(6, $ids);
         $this->assertNotSame($ids[0], $ids[1]);
         $this->assertSame($ids[1], $ids[2]);
         $this->assertNotSame($ids[2], $ids[3]);
         $this->assertSame($ids[3], $ids[4]);
+        $this->assertSame($ids[4], $ids[5]);
     }
 
     /**
