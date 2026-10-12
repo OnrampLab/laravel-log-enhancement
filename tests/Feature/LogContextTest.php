@@ -369,9 +369,11 @@ class LogContextTest extends TestCase
         Log::channel('warnings')->info('ignored');
         Log::channel('warnings')->warning('written');
 
-        $this->assertCount(1, $this->logged);
-        $this->assertSame('written', $this->logged[0]->message);
-        $this->assertSame(static::class, $this->logged[0]->context['class_path']);
+        $records = Log::channel('warnings')->getLogger()->getHandlers()[0]->getRecords();
+
+        $this->assertCount(1, $records);
+        $this->assertSame('written', $records[0]->message);
+        $this->assertSame(static::class, $records[0]->context['class_path']);
     }
 
     protected function loggedClassPaths()
