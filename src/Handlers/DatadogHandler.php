@@ -38,7 +38,7 @@ class DatadogHandler extends AbstractProcessingHandler
      */
     public function __construct(
         string $key,
-        string $region = null,
+        ?string $region = null,
         array $attributes = [],
         $level = Logger::DEBUG,
         bool $bubble = true
