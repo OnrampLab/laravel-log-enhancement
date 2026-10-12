@@ -19,6 +19,7 @@ class LoggerTest extends TestCase
         $monolog = Mockery::mock(Monolog::class);
         $logger = new Logger($monolog);
 
+        $monolog->shouldReceive('isHandling')->andReturn(true);
         $monolog->shouldReceive('info')->withArgs(function ($message, $context) {
             return $message === '123'
                 && isSet($context['class_path'])
