@@ -7,6 +7,7 @@ use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Queue\Events\JobProcessing;
 use Onramplab\LaravelLogEnhancement\Http\Middleware\TraceIdMiddleware;
 use Queue;
 use Ramsey\Uuid\Uuid;
@@ -95,9 +96,27 @@ class LaravelLogEnhancementServiceProvider extends ServiceProvider
 
     public function registerHooks()
     {
-        Queue::before(function () {
+        // Inject trace-id as a plain string into the job payload at dispatch time.
+        // We only return the 'trace_id' key because Laravel uses array_merge to combine
+        // the return value of this callback with the existing payload.
+        Queue::createPayloadUsing(function ($connection, $queue, $payload) {
+            if ($this->app->bound('trace-id')) {
+                return ['trace_id' => $this->app->make('trace-id')];
+            }
+
+            return [];
+        });
+
+        Queue::before(function (JobProcessing $event) {
             $this->app->forgetInstance('log');
             Facade::clearResolvedInstance('log');
+
+            // Restore trace-id from the plain-string payload key injected at dispatch time.
+            $traceId = data_get($event->job->payload(), 'trace_id');
+
+            if ($traceId) {
+                $this->app->instance('trace-id', $traceId);
+            }
         });
     }
 
