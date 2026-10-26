@@ -5,6 +5,7 @@ namespace Onramplab\LaravelLogEnhancement\Tests\Feature;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
@@ -317,14 +318,14 @@ class LogContextTest extends TestCase
      *
      * @return void
      */
-    public function tracking_id_is_different_for_each_channel()
+    public function tracking_id_is_the_bound_trace_id_for_every_channel()
     {
+        App::instance('trace-id', 'TRACE-FROM-REQUEST');
+
         Log::info('message');
         Log::channel('second')->info('message');
 
-        $ids = $this->loggedTrackingIds();
-
-        $this->assertNotSame($ids[0], $ids[1]);
+        $this->assertSame(['TRACE-FROM-REQUEST', 'TRACE-FROM-REQUEST'], $this->loggedTrackingIds());
     }
 
     /**
@@ -332,21 +333,18 @@ class LogContextTest extends TestCase
      *
      * @return void
      */
-    public function tracking_id_is_renewed_for_each_queued_job()
+    public function tracking_id_follows_the_bound_trace_id_for_each_queued_job()
     {
-        Log::info('before');
+        App::instance('trace-id', 'TRACE-OF-JOB-A');
         LogJob::dispatch();
+
+        App::instance('trace-id', 'TRACE-OF-JOB-B');
         LogJob::dispatch();
-        Log::info('after');
 
-        $ids = $this->loggedTrackingIds();
-
-        $this->assertCount(6, $ids);
-        $this->assertNotSame($ids[0], $ids[1]);
-        $this->assertSame($ids[1], $ids[2]);
-        $this->assertNotSame($ids[2], $ids[3]);
-        $this->assertSame($ids[3], $ids[4]);
-        $this->assertSame($ids[4], $ids[5]);
+        $this->assertSame(
+            ['TRACE-OF-JOB-A', 'TRACE-OF-JOB-A', 'TRACE-OF-JOB-B', 'TRACE-OF-JOB-B'],
+            $this->loggedTrackingIds()
+        );
     }
 
     /**

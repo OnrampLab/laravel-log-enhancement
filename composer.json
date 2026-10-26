@@ -14,7 +14,6 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.2",
-        "datadog/dd-trace": "^1.4",
         "illuminate/contracts": "^11.0|^12.0|^13.0",
         "illuminate/log": "^11.0|^12.0|^13.0",
         "illuminate/support": "^11.0|^12.0|^13.0",
@@ -22,6 +21,7 @@
         "ramsey/uuid": "^4.0.0"
     },
     "require-dev": {
+        "datadog/dd-trace": "^1.4",
         "fakerphp/faker": "^1.23",
         "mockery/mockery": "^1.6",
         "larastan/larastan": "^3.0",
@@ -29,6 +29,9 @@
         "phpstan/phpstan": "^2.0",
         "phpunit/phpunit": "^11.0",
         "symfony/thanks": "^1.0"
+    },
+    "suggest": {
+        "datadog/dd-trace": "Datadog APM connect logs and traces."
     },
     "autoload": {
         "psr-4": {
